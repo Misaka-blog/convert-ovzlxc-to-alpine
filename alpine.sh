@@ -1,5 +1,9 @@
 #!/bin/sh -e
 
+echo "本脚本会抹掉 VPS 的所有数据！！"
+read -rp "请确认是否安装 [Y/N]：" yesno
+[[ $yesno =~ N|n ]] && exit 1
+
 server=http://images.linuxcontainers.org
 path=$(wget -O- ${server}/meta/1.0/index-system | \
 grep -v edge | awk '-F;' '($1=="alpine" && $3=="amd64") {print $NF}' | tail -1)
@@ -18,7 +22,7 @@ grep '^root:' /etc/shadow >> /x/etc/shadow
 [ -d /root/.ssh ] && cp -a /root/.ssh /x/root/
 
 # save network configuration
-dev=venet0
+dev=$(awk 'BEGIN {max = 0} {if ($2+0 > max+0) {max=$2 ;content=$0} } END {print $1}' /proc/net/dev | sed "s/://")
 ip=$(ip addr show dev $dev | grep global | awk '($1=="inet") {print $2}' | cut -d/ -f1 | head -1)
 hostname=$(hostname)
  
